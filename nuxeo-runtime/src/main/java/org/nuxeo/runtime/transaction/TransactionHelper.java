@@ -16,6 +16,7 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.transaction.RollbackException;
 import javax.transaction.Status;
+import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
@@ -350,5 +351,19 @@ public class TransactionHelper {
         }
         return false;
     }
+
+    public static void registerSynchronization(Synchronization handler) {
+        if (!isTransactionActiveOrMarkedRollback()) {
+            return;
+        }
+        try {
+            lookupTransactionManager().getTransaction().registerSynchronization(
+                    handler);
+        } catch (IllegalStateException | RollbackException | SystemException
+                | NamingException cause) {
+            throw new RuntimeException("Cannot register synch handler in current tx", cause);
+        }
+    }
+
 
 }
